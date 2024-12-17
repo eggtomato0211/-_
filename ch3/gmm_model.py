@@ -2,30 +2,18 @@ import numpy as np
 
 class GMM:
     def __init__(self, num_components=2, max_iters=200, tol=1e-6):
-        #GMMクラスの初期化
-        self.num_components = num_components #混合数
-        self.max_iters = max_iters #最大反復回数
-        self.tlo = tol #収束条件
-        
-    
+        self.num_components = num_components
+        self.max_iters = max_iters
+        self.tol = tol
+
     def initialize_parameters(self, data):
-        
         N, D = data.shape
-        indices = np.random.choice(N, self.num_components, replace = False)
-        
-        #平均ベクトルをランダムに初期化
+        indices = np.random.choice(N, self.num_components, replace=False)
         self.means = data[indices]
-        
-        #単位行列で初期化
         self.covariances = np.array([np.eye(D) for _ in range(self.num_components)])
-        
-        #重みを均等に初期化
         self.weights = np.ones(self.num_components) / self.num_components
-        
-    #Eステップ 
+
     def e_step(self, data):
-       
-       #負担率を計算する
         N, D = data.shape
         responsibilities = np.zeros((N, self.num_components))
         
@@ -34,11 +22,9 @@ class GMM:
             responsibilities[:, m] = self.weights[m] * pdf
         
         responsibilities /= responsibilities.sum(axis=1, keepdims=True)
-        return responsibilities   
-    
-    #Mステップ
+        return responsibilities
+
     def m_step(self, data, responsibilities):
-        
         N, D = data.shape
         for m in range(self.num_components):
             resp = responsibilities[:, m]
@@ -47,12 +33,8 @@ class GMM:
             diff = data - self.means[m]
             self.covariances[m] = (resp[:, np.newaxis, np.newaxis] * np.einsum('ij,ik->ijk', diff, diff)).sum(axis=0) / total_resp
             self.weights[m] = total_resp / N
-            
-    #対数尤度を計算する関数
+
     def log_likelihood(self, data):
-        """
-        対数尤度を計算する
-        """
         N, D = data.shape
         log_likelihood = 0
         for n in range(N):
@@ -62,10 +44,8 @@ class GMM:
                 likelihood += self.weights[m] * pdf
             log_likelihood += np.log(likelihood)
         return log_likelihood
-    
-    
+
     def fit(self, data):
-       
         self.initialize_parameters(data)
         log_likelihoods = []
         
@@ -79,18 +59,21 @@ class GMM:
                 break
         
         return log_likelihoods
-    
+
     def multivariate_gaussian(self, x, mean, covariance):
-        
-        D = x.shape[0]
+        """
+        多次元正規分布の確率密度関数を計算する関数
+        """
+        D = x.shape[-1]  # データの次元
         det = np.linalg.det(covariance)
         inv = np.linalg.inv(covariance)
         norm_const = 1.0 / (np.sqrt((2 * np.pi) ** D * det))
         x_centered = x - mean
-        return norm_const * np.exp(-0.5 * x_centered @ inv @ x_centered)
-    
-    
-    
-    
-   
         
+        # 1つのデータの場合 (1次元のベクトル)
+        if x_centered.ndim == 1:  
+            exponent = -0.5 * x_centered.T @ inv @ x_centered
+        else:  # N個のデータの場合 (N, D)
+            exponent = -0.5 * np.einsum('ij,jk,ik->i', x_centered, inv, x_centered)
+        
+        return norm_const * np.exp(exponent)
