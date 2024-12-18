@@ -9,10 +9,25 @@ class GMM:
 
     def initialize_parameters(self, data):
         N, D = data.shape
-        indices = np.random.choice(N, self.num_components, replace=False)
-        self.means = data[indices]
-        self.covariances = np.array([np.eye(D) for _ in range(self.num_components)])
-        self.weights = np.ones(self.num_components) / self.num_components
+        # データの最小値と最大値を使って、範囲内にランダムな点を生成
+        min_vals = np.min(data, axis=0)
+        max_vals = np.max(data, axis=0)
+        self.means = np.random.uniform(low=min_vals, high=max_vals, size=(self.num_components, D))
+        
+        # --- 対角共分散行列を初期化（各成分の分散をランダムに設定）---
+        data_cov = np.cov(data, rowvar=False)  # データの共分散行列を求める
+        init_variances = np.diag(data_cov)  # 対角成分を取得（データの各成分の分散）
+        self.covariances = np.array([
+            np.diag(np.random.uniform(0.5 * init_variances, 1.5 * init_variances)) 
+            for _ in range(self.num_components)
+        ])
+        
+         # --- ランダムに重みを生成し、正規化する ---
+        random_weights = np.random.rand(self.num_components)
+        self.weights = random_weights / np.sum(random_weights)  # 和が1になるように正規化
+        
+
+        
 
     def e_step(self, data):
         N, D = data.shape
