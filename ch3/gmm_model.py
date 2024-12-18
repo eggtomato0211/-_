@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class GMM:
     def __init__(self, num_components=2, max_iters=200, tol=1e-6):
@@ -61,19 +62,33 @@ class GMM:
         return log_likelihoods
 
     def multivariate_gaussian(self, x, mean, covariance):
-        """
-        多次元正規分布の確率密度関数を計算する関数
-        """
-        D = x.shape[-1]  # データの次元
+        D = x.shape[0]
         det = np.linalg.det(covariance)
         inv = np.linalg.inv(covariance)
         norm_const = 1.0 / (np.sqrt((2 * np.pi) ** D * det))
         x_centered = x - mean
         
-        # 1つのデータの場合 (1次元のベクトル)
         if x_centered.ndim == 1:  
             exponent = -0.5 * x_centered.T @ inv @ x_centered
-        else:  # N個のデータの場合 (N, D)
+        else:
             exponent = -0.5 * np.einsum('ij,jk,ik->i', x_centered, inv, x_centered)
         
         return norm_const * np.exp(exponent)
+
+    def plot_log_likelihood(self, log_likelihoods, num_components):
+        plt.plot(log_likelihoods)
+        plt.title(f'Log-Likelihood Convergence (num_components={num_components})')
+        plt.xlabel('Iterations')
+        plt.ylabel('Log-Likelihood')
+        plt.savefig(f'log_likelihood_{num_components}.png')  # PNGファイルとして保存
+        plt.close()  # プロットを閉じてメモリを解放
+
+    def plot_means(self, num_components):
+        for m in range(self.num_components):
+            plt.scatter(self.means[m][0], self.means[m][1], label=f'Mean {m+1}')
+        plt.title(f'Estimated Means (num_components={num_components})')
+        plt.xlabel('Temperature')
+        plt.ylabel('Humidity')
+        plt.legend()
+        plt.savefig(f'means_{num_components}.png')  # PNGファイルとして保存
+        plt.close()  # プロットを閉じてメモリを解放

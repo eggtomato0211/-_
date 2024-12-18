@@ -1,0 +1,36 @@
+# Pythonキャッシュファイルを無視
+__pycache__/
+*.pyc
+*.pyo
+
+# 環境構成関連のファイル
+.env
+.venv
+venv/
+env/
+*.env
+*.venv
+
+# Jupyter Notebookのチェックポイントを無視
+.ipynb_checkpoints/
+
+# macOSで自動生成されるファイル
+.DS_Store
+
+# Windowsで自動生成されるファイル
+Thumbs.db
+
+# バックアップファイル
+*.bak
+*.tmp
+*.swp
+
+# Python IDE用の設定ファイルを無視
+.idea/
+.vscode/
+
+# その他のログファイルやデバッグ情報を無視
+*.log
+*.out
+*.err
+
