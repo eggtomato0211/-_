@@ -105,20 +105,32 @@ def calculate_accuracy(predictions, true_labels):
     total = len(true_labels)
     return (correct / total) * 100
 
+def run_gmm_with_initial_conditions(data, initial_conditions, num_components):
+    """
+    異なる初期条件でGMMを学習し、対数尤度の変化をプロットする。
+    """
+    for i, means in enumerate(initial_conditions):
+        print(f"【初期条件セット {i + 1}】")
+        gmm = GMM(num_components=num_components)
+        gmm.initialize_parameters(data, custom_means=means)  # 初期平均ベクトルを設定
+        log_likelihoods = gmm.fit(data)  # 学習
+        gmm.plot_log_likelihood(log_likelihoods, num_components=num_components)
+
 
 if __name__ == "__main__":
     # データの読み込み
     class1_data = load_binary_data('class1.dat')
     class2_data = load_binary_data('class2.dat')
 
-    # 混合数を1から4まで変えて実験
-    num_components_list = [1, 2, 3, 4]
-    run_gmm_experiment(class1_data, class2_data, num_components_list)
+    # 初期条件の設定（例: 2成分の場合）
+    initial_conditions = [
+        np.array([[10, 10], [20, 20]]),
+        np.array([[15, 15], [25, 25]]),
+        np.array([[5, 5], [30, 30]])
+    ]
 
-    # 混合数1から4までの識別率を計算
-    results = classify_and_calculate_accuracy(class1_data, class2_data, num_components_list)
-
-    print("\n【識別率の結果】")
-    print(f"{'混合数':<10}{'クラス1の識別率':<20}{'クラス2の識別率':<20}")
-    for num_components, acc1, acc2 in results:
-        print(f"{num_components:<10}{acc1:<20.2f}{acc2:<20.2f}")
+    # 初期条件を変更した実験を実施
+    run_gmm_with_initial_conditions(class1_data, initial_conditions, num_components=2)
+        
+    
+    

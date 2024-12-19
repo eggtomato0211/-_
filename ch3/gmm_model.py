@@ -7,12 +7,16 @@ class GMM:
         self.max_iters = max_iters
         self.tol = tol
 
-    def initialize_parameters(self, data):
+    def initialize_parameters(self, data, custom_means=None):
         N, D = data.shape
         # データの最小値と最大値を使って、範囲内にランダムな点を生成
         min_vals = np.min(data, axis=0)
         max_vals = np.max(data, axis=0)
-        self.means = np.random.uniform(low=min_vals, high=max_vals, size=(self.num_components, D))
+        # 初期平均ベクトルを手動設定またはランダム初期化
+        if custom_means is None:
+            self.means = np.random.uniform(low=min_vals, high=max_vals, size=(self.num_components, D))
+        else:
+            self.means = custom_means   
         
         # --- 対角共分散行列を初期化（各成分の分散をランダムに設定）---
         data_cov = np.cov(data, rowvar=False)  # データの共分散行列を求める
@@ -90,13 +94,17 @@ class GMM:
         
         return norm_const * np.exp(exponent)
 
-    def plot_log_likelihood(self, log_likelihoods, num_components):
+    def plot_log_likelihood(self, log_likelihoods, num_components, condition_index = None):
         plt.plot(log_likelihoods)
         plt.title(f'Log-Likelihood Convergence (num_components={num_components})')
         plt.xlabel('Iterations')
         plt.ylabel('Log-Likelihood')
-        plt.savefig(f'log_likelihood_{num_components}.png')  # PNGファイルとして保存
-        plt.close()  # プロットを閉じてメモリを解放
+        if condition_index is not None:
+            filename = f'log_likelihood_{num_components}_condition_{condition_index + 1}.png'
+        else:
+            filename = f'log_likelihood_{num_components}.png'
+        plt.savefig(filename)  # 動的なファイル名で保存
+        plt.close()
 
     def plot_means(self, num_components):
         for m in range(self.num_components):
